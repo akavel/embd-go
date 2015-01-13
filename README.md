@@ -35,7 +35,7 @@ C:> type hello.go
 //
 // Generated with:
 //
-//      go run "-o" "hello.go" "-p" "main" "hello.txt"
+//      embd-go "-o" "hello.go" "-p" "main" "hello.txt"
 
 package main
 
