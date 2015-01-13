@@ -4,7 +4,7 @@
 
 embd-go is an embeddable command-line tool for embedding data files in Go source code, ***specially crafted for easy use with [`go generate`](http://blog.golang.org/generate)***.
 
-## Easy use with [`go generate`](http://blog.golang.org/generate)***
+## Easy use with [`go generate`](http://blog.golang.org/generate)
 
 The embd.go is a single, self-contained, MIT-licensed, go-runnable file, so you can ***copy it verbatim*** into your own project's repository, and keep it there forever:
 
