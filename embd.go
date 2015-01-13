@@ -164,7 +164,7 @@ var Template = `
 //
 // Generated with:
 //
-//	go run {{range .Args}}{{. | printf "%q"}}{{end}}
+//	go run{{range .Args}}{{. | printf " %q"}}{{end}}
 
 package {{.Pkg}}
 {{range .Files}}
