@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2015 Mateusz Czapliński
+Copyright (c) 2015 Mateusz Czapliński <czapkofan@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -175,32 +175,9 @@ var {{.VarName}} = []byte{"" +
 {{end}}`[1:]
 
 /*
-var header = `
-// DO NOT EDIT BY HAND
-//
-// Generated with:
-//
-//	go run {ARGS}
-
-package {PKG}
-
-`[1:]
-
-var fileTemplate = `
-var {NAME} = []byte{ "" +
-{CONTENT}
-}
-`[1:]
-
 var dirTemplate = `
 var {NAME} = map[string][]byte{
 {ENTRIES}
 }
-`[1:]
-
-var entryTemplate = `
-	"{PATH}": []byte{ "" +
-{CONTENT}
-	},
 `[1:]
 */
