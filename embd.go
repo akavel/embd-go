@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+// embd-go version 1.0 (2015-01-14) https://github.com/akavel/embd-go
 package main
 
 import (
@@ -164,7 +165,7 @@ var Template = `
 //
 // Generated with:
 //
-//	go run{{range .Args}}{{. | printf " %q"}}{{end}}
+//	embd-go{{range .Args}}{{. | printf " %q"}}{{end}}
 
 package {{.Pkg}}
 {{range .Files}}
