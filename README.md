@@ -29,11 +29,11 @@ var File_hello_txt = []byte{"" +
 
 ## Single file
 
-The embd.go is a single, self-contained, go-runnable file, so you can *copy it verbatim* into your own project's repository:
+The embd.go is a single, self-contained, MIT-licensed, go-runnable file, so you can ***copy it verbatim*** into your own project's repository:
 
     Windows: copy %GOPATH%\github.com\akavel\embd-go\embd.go tools\embd.go
     Linux:   cp $GOPATH/github.com/akavel/embd-go/embd.go tools/embd.go
     
-and then call from e.g. `go generate` via `go run`, as in:
+and then call from e.g. [`go generate`](http://blog.golang.org/generate) via `go run`, as in:
 
-    //go:generate go run tools/embd.go -o embd/data.go -p embd MY_DATA.dat
+    //go:generate go run tools/embd.go -o embd/data.go -p embd MY_DATA/HELLO.DTA
