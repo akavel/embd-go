@@ -8,8 +8,8 @@ embd-go is an embeddable command-line tool for embedding data files in Go source
 
 The embd.go is a single, self-contained, MIT-licensed, go-runnable file, so you can ***copy it verbatim*** into your own project's repository, and keep it there forever:
 
-    Windows: copy %GOPATH%\github.com\akavel\embd-go\embd.go tools\embd.go
-    Linux:   cp $GOPATH/github.com/akavel/embd-go/embd.go tools/embd.go
+    Windows: copy %GOPATH%\src\github.com\akavel\embd-go\embd.go tools\embd.go
+    Linux:   cp $GOPATH/src/github.com/akavel/embd-go/embd.go tools/embd.go
     
 and then call from e.g. [`go generate`](http://blog.golang.org/generate) via `go run`, by putting a line like shown below in one of your Go source files:
 
