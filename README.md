@@ -40,8 +40,6 @@ C:> type hello.go
 package main
 
 // File_hello_txt contains contents of "hello.txt" file.
-var File_hello_txt = []byte{"" +
-        "Hello\r\n" +
-        ""}
+var File_hello_txt = []byte("Hello\r\n")
 ```
 
