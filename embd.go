@@ -45,7 +45,7 @@ var (
 func main() {
 	err := run()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %s", err)
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		os.Exit(1)
 	}
 }
@@ -113,6 +113,11 @@ func run() error {
 
 var Normalize = regexp.MustCompile(`[^A-Za-z0-9]+`)
 
+func GoEscaped(buf []byte) string {
+	s := fmt.Sprintf("%q", string(buf))
+	return s[1 : len(s)-1]
+}
+
 func NewFile(path string) (File, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -130,22 +135,22 @@ func NewFile(path string) (File, error) {
 			n, err := io.ReadFull(r, buf[:])
 			switch err {
 			case io.ErrUnexpectedEOF:
-				ch <- string(buf[:n])
+				ch <- GoEscaped(buf[:n])
 				fallthrough
 			case io.EOF:
 				close(ch)
 				return
 			case nil:
-				ch <- string(buf[:])
+				ch <- GoEscaped(buf[:])
 			default:
 				panic(fmt.Errorf("%s: %s", path, err))
 			}
 		}
 	}()
 	return File{
-		Path:      path,
-		VarName:   Normalize.ReplaceAllString("File_"+filepath.Base(path), "_"),
-		DataLines: ch,
+		Path:          path,
+		VarName:       Normalize.ReplaceAllString("File_"+filepath.Base(path), "_"),
+		DataFragments: ch,
 	}, nil
 }
 
@@ -157,7 +162,7 @@ type Contents struct {
 
 type File struct {
 	VarName, Path string
-	DataLines     <-chan string
+	DataFragments <-chan string
 }
 
 var Template = `
@@ -170,9 +175,7 @@ var Template = `
 package {{.Pkg}}
 {{range .Files}}
 // {{.VarName}} contains contents of "{{.Path}}" file.
-var {{.VarName}} = []byte{"" +
-{{range .DataLines}}	{{. | printf "%q"}} +
-{{end}}	""}
+var {{.VarName}} = []byte("{{range .DataFragments}}{{.}}{{end}}")
 {{end}}`[1:]
 
 /*
