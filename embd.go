@@ -30,6 +30,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -72,20 +73,36 @@ func run() error {
 		Args:  os.Args[1:],
 		Pkg:   *pkg,
 		Files: map[string]File{},
+		Dirs:  make(map[string][]File),
 	}
 	for _, path := range flag.Args() {
-		// TODO(akavel): support directories
-		f, err := NewFile(path)
+		fi, err := os.Stat(path)
 		if err != nil {
 			return err
 		}
-		if old, exists := contents.Files[f.VarName]; exists {
-			return fmt.Errorf(
-				"generated variable name conflict: '%s' resolves to"+
-					"the same variable name %s as '%s'",
-				f.Path, f.VarName, old.Path)
+
+		if fi.IsDir() {
+			f, _ := ioutil.ReadDir(path)
+			for _, p := range f {
+				f, err := NewFile(path + "/" + p.Name())
+				if err != nil {
+					return err
+				}
+				contents.Dirs[fi.Name()] = append(contents.Dirs[fi.Name()], f)
+			}
+		} else {
+			f, err := NewFile(path)
+			if err != nil {
+				return err
+			}
+			if old, exists := contents.Files[f.VarName]; exists {
+				return fmt.Errorf(
+					"generated variable name conflict: '%s' resolves to"+
+						"the same variable name %s as '%s'",
+					f.Path, f.VarName, old.Path)
+			}
+			contents.Files[f.VarName] = f
 		}
-		contents.Files[f.VarName] = f
 	}
 
 	err := os.MkdirAll(filepath.Dir(*out), 0777)
@@ -158,6 +175,7 @@ type Contents struct {
 	Args  []string
 	Pkg   string
 	Files map[string]File
+	Dirs  map[string][]File
 }
 
 type File struct {
@@ -176,12 +194,12 @@ package {{.Pkg}}
 {{range .Files}}
 // {{.VarName}} contains contents of "{{.Path}}" file.
 var {{.VarName}} = []byte("{{range .DataFragments}}{{.}}{{end}}")
-{{end}}`[1:]
+{{end}}
 
-/*
-var dirTemplate = `
-var {NAME} = map[string][]byte{
-{ENTRIES}
+{{range $index, $element := .Dirs}}
+var Dir_{{$index}} = map[string][]byte{
+{{range $element}}
+"{{.VarName}}": []byte("{{range .DataFragments}}{{.}}{{end}}"),
+{{end}}
 }
-`[1:]
-*/
+{{end}}`[1:]
