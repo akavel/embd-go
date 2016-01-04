@@ -22,7 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-// embd-go version 1.0 (2015-01-14) https://github.com/akavel/embd-go
 package main
 
 import (
@@ -36,6 +35,8 @@ import (
 	"regexp"
 	"text/template"
 )
+
+const version = "embd-go version 1.1 (2016-01-04) https://github.com/akavel/embd-go"
 
 var (
 	out = flag.String("o", "embd/data.go", "Path to generated file.")
@@ -55,6 +56,7 @@ func run() error {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "USAGE: %s [FLAGS] PATH...\n", filepath.Base(os.Args[0]))
 		flag.PrintDefaults()
+		fmt.Fprintln(os.Stderr, version)
 	}
 	flag.Parse()
 	if flag.NArg() == 0 {
