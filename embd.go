@@ -75,7 +75,7 @@ func run() error {
 		Args:  os.Args[1:],
 		Pkg:   *pkg,
 		Files: map[string]File{},
-		Dirs:  make(map[string][]File),
+		Dirs:  map[string]map[string]File{},
 	}
 	for _, path := range flag.Args() {
 		fi, err := os.Stat(path)
@@ -84,13 +84,22 @@ func run() error {
 		}
 
 		if fi.IsDir() {
-			f, _ := ioutil.ReadDir(path)
+			f, err := ioutil.ReadDir(path)
+			if err != nil {
+				return err
+			}
+
+			if _, exists := contents.Dirs[fi.Name()]; exists {
+				return fmt.Errorf("directory %s was resolved to variable %s. But last's already found", path, fi.Name())
+			}
+
+			contents.Dirs[fi.Name()] = map[string]File{}
 			for _, p := range f {
 				f, err := NewFile(path + "/" + p.Name())
 				if err != nil {
 					return err
 				}
-				contents.Dirs[fi.Name()] = append(contents.Dirs[fi.Name()], f)
+				contents.Dirs[fi.Name()][f.VarName] = f
 			}
 		} else {
 			f, err := NewFile(path)
@@ -177,7 +186,7 @@ type Contents struct {
 	Args  []string
 	Pkg   string
 	Files map[string]File
-	Dirs  map[string][]File
+	Dirs  map[string]map[string]File
 }
 
 type File struct {
