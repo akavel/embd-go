@@ -78,29 +78,30 @@ func run() error {
 		Dirs:  map[string]map[string]File{},
 	}
 	for _, path := range flag.Args() {
-		fi, err := os.Stat(path)
+		info, err := os.Stat(path)
 		if err != nil {
 			return err
 		}
 
-		if fi.IsDir() {
-			f, err := ioutil.ReadDir(path)
+		if info.IsDir() {
+			dir, err := ioutil.ReadDir(path)
 			if err != nil {
 				return err
 			}
 
-			if _, exists := contents.Dirs[fi.Name()]; exists {
-				return fmt.Errorf("directory %s was resolved to variable %s. But last's already found", path, fi.Name())
+			if _, exists := contents.Dirs[info.Name()]; exists {
+				return fmt.Errorf("directory %s was resolved to variable %s. But last's already found", path, info.Name())
 			}
 
-			contents.Dirs[fi.Name()] = map[string]File{}
-			for _, p := range f {
-				f, err := NewFile(path + "/" + p.Name())
+			files := map[string]File{}
+			for _, info := range dir {
+				f, err := NewFile(path + "/" + info.Name())
 				if err != nil {
 					return err
 				}
-				contents.Dirs[fi.Name()][f.VarName] = f
+				files[f.VarName] = f
 			}
+			contents.Dirs[info.Name()] = files
 		} else {
 			f, err := NewFile(path)
 			if err != nil {
