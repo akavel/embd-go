@@ -78,6 +78,7 @@ func run() error {
 		Dirs:  map[string]map[string]File{},
 	}
 	for _, path := range flag.Args() {
+		path := filepath.ToSlash(path)
 		info, err := os.Stat(path)
 		if err != nil {
 			return err
