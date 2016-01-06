@@ -217,9 +217,13 @@ var {{.VarName}} = []byte("{{range .DataFragments}}{{.}}{{end}}")
 {{end}}
 
 {{range $index, $element := .Dirs}}
-var {{$index}} = map[string][]byte{
+var {{$index}} = struct {
 {{range $element}}
-"{{.VarName}}": []byte("{{range .DataFragments}}{{.}}{{end}}"),
+    {{.VarName}} []byte
+{{end}}
+}{
+{{range $element}}
+    []byte("{{range .DataFragments}}{{.}}{{end}}"),
 {{end}}
 }
 {{end}}`[1:]
