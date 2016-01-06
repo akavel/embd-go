@@ -13,7 +13,7 @@ The embd.go is a single, self-contained, MIT-licensed, go-runnable file, so you 
     
 and then call from e.g. [`go generate`](http://blog.golang.org/generate) via `go run`, by putting a line like shown below in one of your Go source files:
 
-    //go:generate go run tools/embd.go -o embd/data.go -p embd MY_DATA/HELLO.DAT
+    //go:generate go run tools/embd.go -o embd/data.go -p embd MY_DATA/HELLO.DAT MY_DIRECTORY
 
 
 ## Usage
@@ -43,3 +43,30 @@ package main
 var File_hello_txt = []byte("Hello\r\n")
 ```
 
+Also, you could use directories as `PATH`. For example: 
+
+```bash
+$ mkdir -p configs
+$ echo 'config1' > configs/1.conf
+$ echo 'config2' > configs/2.conf
+$ ./embd-go -p "configs" configs
+$ cat embd/data.go
+// DO NOT EDIT BY HAND
+//
+// Generated with:
+//
+//	embd-go "-p" "configs" "configs"
+
+package configs
+
+var Dir_configs = struct {
+	File_1_conf []byte
+
+	File_2_conf []byte
+}{
+
+	[]byte("config1\n"),
+
+	[]byte("config2\n"),
+}
+```
