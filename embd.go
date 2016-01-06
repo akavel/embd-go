@@ -90,7 +90,8 @@ func run() error {
 				return err
 			}
 
-			if _, exists := contents.Dirs[info.Name()]; exists {
+			k := "Dir" + normalize(path)
+			if _, exists := contents.Dirs[k]; exists {
 				return fmt.Errorf("directory %s was resolved to variable %s. But last's already found", path, info.Name())
 			}
 
@@ -102,7 +103,7 @@ func run() error {
 				}
 				files[f.VarName] = f
 			}
-			contents.Dirs[info.Name()] = files
+			contents.Dirs[k] = files
 		} else {
 			f, err := NewFile(path)
 			if err != nil {
@@ -114,7 +115,9 @@ func run() error {
 						"the same variable name %s as '%s'",
 					f.Path, f.VarName, old.Path)
 			}
-			contents.Files[f.VarName] = f
+
+			k := "File" + normalize(path)
+			contents.Files[k] = f
 		}
 	}
 
@@ -139,6 +142,10 @@ func run() error {
 	}
 
 	return nil
+}
+
+func normalize(path string) string {
+	return Normalize.ReplaceAllString("_"+filepath.Base(path), "_")
 }
 
 var Normalize = regexp.MustCompile(`[^A-Za-z0-9]+`)
@@ -210,7 +217,7 @@ var {{.VarName}} = []byte("{{range .DataFragments}}{{.}}{{end}}")
 {{end}}
 
 {{range $index, $element := .Dirs}}
-var Dir_{{$index}} = map[string][]byte{
+var {{$index}} = map[string][]byte{
 {{range $element}}
 "{{.VarName}}": []byte("{{range .DataFragments}}{{.}}{{end}}"),
 {{end}}
