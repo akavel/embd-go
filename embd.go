@@ -2,6 +2,7 @@
 The MIT License (MIT)
 
 Copyright (c) 2015 Mateusz Czapliński <czapkofan@gmail.com>
+Copyright (c) 2016 alxmsl <alexey.y.maslov@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,19 +23,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-// embd-go version 1.0 (2015-01-14) https://github.com/akavel/embd-go
 package main
 
 import (
 	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
+	"go/format"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"text/template"
 )
+
+const version = "embd-go version 1.1 (2016-01-13) https://github.com/akavel/embd-go"
 
 var (
 	out = flag.String("o", "embd/data.go", "Path to generated file.")
@@ -54,6 +59,8 @@ func run() error {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "USAGE: %s [FLAGS] PATH...\n", filepath.Base(os.Args[0]))
 		flag.PrintDefaults()
+		fmt.Println("Note: directories are added non-recursively (only immediate children).")
+		fmt.Fprintln(os.Stderr, version)
 	}
 	flag.Parse()
 	if flag.NArg() == 0 {
@@ -72,20 +79,64 @@ func run() error {
 		Args:  os.Args[1:],
 		Pkg:   *pkg,
 		Files: map[string]File{},
+		Dirs:  map[string]map[string]File{},
 	}
 	for _, path := range flag.Args() {
-		// TODO(akavel): support directories
-		f, err := NewFile(path)
+		path := filepath.ToSlash(path)
+		info, err := os.Stat(path)
 		if err != nil {
 			return err
 		}
-		if old, exists := contents.Files[f.VarName]; exists {
-			return fmt.Errorf(
-				"generated variable name conflict: '%s' resolves to"+
-					"the same variable name %s as '%s'",
-				f.Path, f.VarName, old.Path)
+
+		if info.IsDir() {
+			dir, err := ioutil.ReadDir(path)
+			if err != nil {
+				return err
+			}
+
+			k := "Dir" + normalize(path)
+			if _, exists := contents.Dirs[k]; exists {
+				return fmt.Errorf("generated variable name conflict: directory '%s' resolves to"+
+					" variable name %s, which was already reserved for one of the previous arguments",
+					path, k)
+			}
+
+			files := map[string]File{}
+			for _, info := range dir {
+				// TODO(akavel): add subdirectories recursively
+				if info.IsDir() {
+					continue
+				}
+
+				f, err := NewFile(path + "/" + info.Name())
+				if err != nil {
+					return err
+				}
+				if old, exists := files[f.VarName]; exists {
+					return fmt.Errorf(
+						"generated variable name conflict: '%s' resolves to"+
+							"the same variable name %s as '%s'",
+						f.Path, f.VarName, old.Path)
+				}
+
+				files[f.VarName] = f
+			}
+			contents.Dirs[k] = files
+		} else {
+			f, err := NewFile(path)
+			if err != nil {
+				return err
+			}
+			if old, exists := contents.Files[f.VarName]; exists {
+				return fmt.Errorf(
+					"generated variable name conflict: '%s' resolves to"+
+						"the same variable name %s as '%s'",
+					f.Path, f.VarName, old.Path)
+			}
+
+			k := "File" + normalize(path)
+			contents.Files[k] = f
 		}
-		contents.Files[f.VarName] = f
 	}
 
 	err := os.MkdirAll(filepath.Dir(*out), 0777)
@@ -93,22 +144,27 @@ func run() error {
 		return err
 	}
 
-	out, err := os.Create(*out)
+	w := bytes.Buffer{}
+	err = template.Must(template.New("Contents").Parse(Template)).Execute(&w, contents)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
 
-	w := bufio.NewWriter(out)
-	defer w.Flush()
+	code, err := format.Source(w.Bytes())
+	if err != nil {
+		return err
+	}
 
-	err = template.Must(template.New("Contents").Parse(Template)).
-		Execute(w, contents)
+	err = ioutil.WriteFile(*out, code, 0644)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func normalize(path string) string {
+	return Normalize.ReplaceAllString("_"+filepath.Base(path), "_")
 }
 
 var Normalize = regexp.MustCompile(`[^A-Za-z0-9]+`)
@@ -158,6 +214,7 @@ type Contents struct {
 	Args  []string
 	Pkg   string
 	Files map[string]File
+	Dirs  map[string]map[string]File
 }
 
 type File struct {
@@ -176,12 +233,16 @@ package {{.Pkg}}
 {{range .Files}}
 // {{.VarName}} contains contents of "{{.Path}}" file.
 var {{.VarName}} = []byte("{{range .DataFragments}}{{.}}{{end}}")
-{{end}}`[1:]
+{{end}}
 
-/*
-var dirTemplate = `
-var {NAME} = map[string][]byte{
-{ENTRIES}
+{{range $name, $files := .Dirs}}
+var {{$name}} = struct {
+{{range $files}}
+	{{.VarName}} []byte
+{{end}}
+}{
+{{range $files}}
+	[]byte("{{range .DataFragments}}{{.}}{{end}}"),
+{{end}}
 }
-`[1:]
-*/
+{{end}}`[1:]
