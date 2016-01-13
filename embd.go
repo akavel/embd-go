@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2015 Mateusz Czapliński <czapkofan@gmail.com>
+Copyright (c) 2015-2016 Mateusz Czapliński <czapkofan@gmail.com>
 Copyright (c) 2016 alxmsl <alexey.y.maslov@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -30,7 +30,6 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"go/format"
 	"io"
 	"io/ioutil"
 	"os"
@@ -39,7 +38,7 @@ import (
 	"text/template"
 )
 
-const version = "embd-go version 1.1 (2016-01-13) https://github.com/akavel/embd-go"
+const version = "embd-go version 1.2 (2016-01-13) https://github.com/akavel/embd-go"
 
 var (
 	out = flag.String("o", "embd/data.go", "Path to generated file.")
@@ -68,9 +67,6 @@ func run() error {
 		os.Exit(1)
 	}
 
-	//TODO: for each path, detect if it's a file or directory
-	//TODO: bail out if any normalized variable name repeats itself
-	//TODO: generate file contents, converted appropriately to escaped multiline string blobs
 	//TODO[later]: build only one big string constant in init(), then make the variables contain its subslices
 	//TODO[later]: make sure we don't follow symlinks (for simplicity)
 
@@ -150,7 +146,7 @@ func run() error {
 		return err
 	}
 
-	code, err := format.Source(w.Bytes())
+	code := w.Bytes()
 	if err != nil {
 		return err
 	}
@@ -233,16 +229,16 @@ package {{.Pkg}}
 {{range .Files}}
 // {{.VarName}} contains contents of "{{.Path}}" file.
 var {{.VarName}} = []byte("{{range .DataFragments}}{{.}}{{end}}")
-{{end}}
-
+{{end}}`[1:] + `
 {{range $name, $files := .Dirs}}
 var {{$name}} = struct {
-{{range $files}}
+{{range $files}}`[1:] + `
+	// {{.VarName}} contains contents of "{{.Path}}" file.
 	{{.VarName}} []byte
-{{end}}
+{{end}}`[1:] + `
 }{
-{{range $files}}
+{{range $files}}`[1:] + `
 	[]byte("{{range .DataFragments}}{{.}}{{end}}"),
-{{end}}
+{{end}}`[1:] + `
 }
 {{end}}`[1:]

@@ -62,13 +62,12 @@ $ cat embd/data.go
 package configs
 
 var Dir_configs = struct {
+	// File_1_conf contains contents of "configs/1.conf" file.
 	File_1_conf []byte
-
+	// File_2_conf contains contents of "configs/2.conf" file.
 	File_2_conf []byte
 }{
-
 	[]byte("config1\n"),
-
 	[]byte("config2\n"),
 }
 ```
