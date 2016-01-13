@@ -220,14 +220,14 @@ package {{.Pkg}}
 var {{.VarName}} = []byte("{{range .DataFragments}}{{.}}{{end}}")
 {{end}}
 
-{{range $index, $element := .Dirs}}
-var {{$index}} = struct {
-{{range $element}}
-    {{.VarName}} []byte
+{{range $name, $files := .Dirs}}
+var {{$name}} = struct {
+{{range $files}}
+	{{.VarName}} []byte
 {{end}}
 }{
-{{range $element}}
-    []byte("{{range .DataFragments}}{{.}}{{end}}"),
+{{range $files}}
+	[]byte("{{range .DataFragments}}{{.}}{{end}}"),
 {{end}}
 }
 {{end}}`[1:]
