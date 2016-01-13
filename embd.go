@@ -39,7 +39,7 @@ import (
 	"text/template"
 )
 
-const version = "embd-go version 1.1 (2016-01-04) https://github.com/akavel/embd-go"
+const version = "embd-go version 1.1 (2016-01-13) https://github.com/akavel/embd-go"
 
 var (
 	out = flag.String("o", "embd/data.go", "Path to generated file.")
@@ -59,6 +59,7 @@ func run() error {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "USAGE: %s [FLAGS] PATH...\n", filepath.Base(os.Args[0]))
 		flag.PrintDefaults()
+		fmt.Println("Note: directories are added non-recursively (only immediate children).")
 		fmt.Fprintln(os.Stderr, version)
 	}
 	flag.Parse()
@@ -102,6 +103,11 @@ func run() error {
 
 			files := map[string]File{}
 			for _, info := range dir {
+				// TODO(akavel): add subdirectories recursively
+				if info.IsDir() {
+					continue
+				}
+
 				f, err := NewFile(path + "/" + info.Name())
 				if err != nil {
 					return err

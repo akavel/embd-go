@@ -24,6 +24,8 @@ USAGE: go run embd.go [FLAGS] PATH...
   -p="embd": Package that the generated file should be in.
 ```
 
+Note: directories that are used as a `PATH` will be added non-recursively (only immediate children)
+
 ## Example
 
 ```
