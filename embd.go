@@ -27,7 +27,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"flag"
 	"fmt"
 	"io"
@@ -140,18 +139,16 @@ func run() error {
 		return err
 	}
 
-	w := bytes.Buffer{}
-	err = template.Must(template.New("Contents").Parse(Template)).Execute(&w, contents)
+	out, err := os.Create(*out)
 	if err != nil {
 		return err
 	}
+	defer out.Close()
 
-	code := w.Bytes()
-	if err != nil {
-		return err
-	}
+	w := bufio.NewWriter(out)
+	defer w.Flush()
 
-	err = ioutil.WriteFile(*out, code, 0644)
+	err = template.Must(template.New("Contents").Parse(Template)).Execute(w, contents)
 	if err != nil {
 		return err
 	}
