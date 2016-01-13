@@ -95,7 +95,9 @@ func run() error {
 
 			k := "Dir" + normalize(path)
 			if _, exists := contents.Dirs[k]; exists {
-				return fmt.Errorf("directory %s was resolved to variable %s. But last's already found", path, info.Name())
+				return fmt.Errorf("generated variable name conflict: directory '%s' resolves to"+
+					" variable name %s, which was already reserved for one of the previous arguments",
+					path, k)
 			}
 
 			files := map[string]File{}
