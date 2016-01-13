@@ -112,6 +112,13 @@ func run() error {
 				if err != nil {
 					return err
 				}
+				if old, exists := files[f.VarName]; exists {
+					return fmt.Errorf(
+						"generated variable name conflict: '%s' resolves to"+
+							"the same variable name %s as '%s'",
+						f.Path, f.VarName, old.Path)
+				}
+
 				files[f.VarName] = f
 			}
 			contents.Dirs[k] = files
